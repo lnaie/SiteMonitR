@@ -1,56 +1,38 @@
 # SiteMonitR Sample #
 
-The SiteMonitR sample demonstrates how a Windows Azure Cloud Service and a Windows Azure Web Site can use SignalR to communicate in an asynchronous communication. The SiteMonitR Cloud Service pings all of the sites in a list of sites stored in Windows Azure Table Storage. As each site's status is obtained, it is sent over to a SignalR Hub housed in a Windows Azure Web Site. When the SignalR Hub receives notifications for a site, the Web Site's user interface is updated in real-time. The result is a web site monitoring application that provides up-to-date status of web sites, giving site administrators real-time data on how their sites are performing. 
+The SiteMonitR Cloud Service pings all of the sites in a list of sites stored in Microsoft Azure Storage. As each site's status is obtained a message is sent to a storage queue. A WebJob running in a Web Site picks up the results of each site's status check and saves the log entry to a storage table. Hosted in a Web Site in Azure, a Web API controller receives messages from the WebJobs when sites are pinged. The Web API controller then sends updates to the SiteMonitR dashboard via a SignalR Hub. The result is a web-based web site monitoring tool. 
 
 ### Prerequisites
 
-* [Visual Studio 2012](http://www.microsoft.com/visualstudio/en-us/products) 
-* [Windows Azure SDK for .NET 1.7](http://www.windowsazure.com/en-us/develop/net/)
+* [Visual Studio 2013](http://www.microsoft.com/visualstudio/en-us/products) 
+* [Windows Azure SDK for .NET 2.2](http://www.windowsazure.com/en-us/develop/net/)
 
-### Running the Sample Locally
-To get the site and cloud service running locally on a development workstation execute the following steps. 
+### Setting up the Sample
 
-1. Open Visual Studio 2012 as an Administrator (the Windows Azure SDK requires elevated priveleges to run the Windows Azure Compute and Storage emulators)
-1. Open the SiteMonitR.sln solution
-1. Press the F5 key to run the Cloud Service and Web Site simultaneously
-1. Use the HTML form to add a URL (include the "http://" in the text box)
-1. Observe as the site is monitored
-1. Add any additional sites and observe how they are monitored in real time
+The instructions below will walk you through the process of setting up SiteMonitR both locally on your development workstation and for getting it running live in Microsoft Azure. 
 
+1. Download the code
+1. Open the solution in Visual Studio and compile it. NuGet package restore should pull down all of the required NuGet packages automatically
+1. Go to the **bin/Debug** folder of the SiteMonitR.WebJobs.EventDriven project. Zip all of the files (excluding .PDB and .XML files or any file with the term **vshost**). Rename the zip file to **EventDriven.zip** and copy it to your desktop.
+1. Go to the **bin/Debug** folder of the SiteMonitR.WebJobs.Scheduled project. Zip all of the files (excluding .PDB and .XML files or any file with the term **vshost**). Rename the zip file to **Scheduled.zip** and copy it to your desktop.
+1. Publish the SiteMonitR.Web web project into a new Windows Azure Web Site
+1. If you don't have any Storage accounts in your Azure subscription, create one in the Azure portal.
+1. Copy the storage account's name and primary (or secondary) keys, and build a string representing the storage account connection string. The format of this string looks like this:
 
-### Running the Sample in Windows Azure
-To get the site and cloud service running in Windows Azure, execute the following steps. A more comprehensive walk-through on setting up the entire application, see the [Getting Started](https://github.com/WindowsAzure-Samples/SiteMonitR/blob/master/GettingStarted.md) document for this sample. 
+    DefaultEndpointsProtocol=https;AccountName=[YOUR ACCOUNT NAME];AccountKey=[YOUR ACCOUNT KEY]
 
-1. Log in to the Windows Azure portal. 
-1. Create a new storage account to be used by the application.
-1. Create a new Cloud Service to use as the background service for the SiteMonitR application.
-1. Create a new Web Site to use to as the front-end web site for the SiteMonitR application.
-1. Go into the dashboard for the new storage account you created and click the **Manage Keys** button at the bottom of the portal. Copy the storage account's key to the clipboard.
-1. In Visual Studio 2012, expand the **SiteMonitR.Azure** project's **Roles** node. Double-click the **SiteMonitR.WorkerRole** node to open up the role's settings pane.
-1. Select the **Cloud** option from the **Service Configuration** drop-down menu. 
-1. Click the ellipse button next to the **SiteMonitRConnectionString** setting. 
-1. Enter in the storage account name and primary access key copied from the portal.
-1. Click the OK button.
-1. Repeat the same steps to set the **Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString** setting.
-1. Change the **GUI_URL** setting to reflect the URL of the Windows Azure Web Site you created using the Windows Azure portal. 
-1. Right-click the **SiteMonitR.Azure** project and select the **Publish** menu item from the context menu.
-1. If you haven't yet imported your publish settings, click the **Sign in to download credentials** link in the publish dialog. 
-1. Your web browser will open up and browse to the Windows Azure publish profile download page. When the page tries to download the publish settings file, click the **Save** button to save the file to your local workstation.
-1. Go back to Visual Studio 2012. Click the **Import** button in the publish dialog. Then, browse to the publish settings file you just downloaded and select it. 
-1. Click the **Publish** button to deploy the Cloud Service to Windows Azure.
-1. The **Windows Azure Activity Log** window should open to display the Cloud Service's publishing process happening.
-1. Go back to the Windows Azure portal. Click the web site you just created to load the site's dashboard page. 
-1. Once the site's dashboard loads in the browser, click the **Download publish profile** link.
-1. When the browser tries to download the file, save it to your local workstation. 
-1. Right-click the **SiteMonitR.Web** project in Visual Studio 2012. Then select the **Publish** menu item from the context menu.
-1. Click the **Import** button on the publish dialog. Then, find the web site publish settings file downloaded from the Windows Azure portal.
-1. Click the **Publish** button in the dialog to publish the web site to Windows Azure.
-1. Once the site has been published, go back to the site's dashboard page in the Windows Azure portal. Click the **Configure** tab. 
-1. Change the default document from **Default.htm** to **Default.html**. Then delete the other options from the list of default pages. Then, click the **Save** button to save the site configuration.
-1. Click the **Browse** button at the bottom of the web site's dashboard to browse the site.
-1. The site will open and present you with a simple form you can use to provide URL's of sites you'd like to monitor. 
-1. Type in a site URL and click the **Add Site** button. The site will be added to the list of sites you are monitoring. 
-1. Add in as many sites as you would like. All of the sites are monitored by the Cloud Service. Their status will update in real-time as the sites are hit by the service and reported in the web site. To remove a site, click the X button and the site will be removed from the list of sites monitored by the application. 
-
-### Detailed Instructions ###
-For a more detailed walk-through on how to perform each of the individual tasks required to get this sample working in Windows Azure, see the sample's [Getting Started](https://github.com/WindowsAzure-Samples/SiteMonitR/blob/master/GettingStarted.md) document in the repository containing the code for the sample. 
+1. Go to the Web Site's **Configure** tab in the Management Portal
+1. Create a new Connection String for the web site **using the Azure Management Portal** *(just setting the value in your Web.config file won't work, you need to set this using the portal)* you just deployed named **AzureJobsRuntime** and paste the connection string as the value of the Connection String.
+1. Create a new Connection String for the web site **using the Azure Management Portal** *(just setting the value in your Web.config file won't work, you need to set this using the portal)* you just deployed named **AzureJobsData** and paste the connection string as the value of the Connection String.
+1. Create a new App Setting for the web site **using the Azure Management Portal**. The name of the App Setting should be set to **SiteMonitR.DashboardUrl** and the value should be your web site's root URL (i.e., http://sitemonitr.azurewebsites.net)
+1. Go to the **WebJobs** tab for the Web Site in the Management Portal
+1. Click the **Add a Job** link
+1. Name the job "Event Driven" and upload the **EventDriven.zip** file from your desktop. Select **Run Continuously** from the **How to Run** drop-down menu.
+1. Go to the **WebJobs** tab for the Web Site in the Management Portal
+1. Click the **Add** button at the bottom of the Management Portal
+1. Name the job **Scheduled** and upload the **Scheduled.zip** file from your desktop. Select **Run on a Schedule** from the **How to Run** drop-down menu.
+1. Set the schedule for the Scheduled WebJob per your liking. A suggestion is to set it to run every 15 minutes, but you can specify it for however often you prefer for your sites to be pinged. 
+1. Restart the web site
+1. Click the **Browse** button from within the Management Portal to browse the site. 
+1. Add sites you wish to monitor.
+1. If you'd like to force the WebJob to ping the sites you add from the SiteMonitR Web Dashboard, select the **Scheduled** WebJob and click the **Run** button at the bottom of the Management Portal.
